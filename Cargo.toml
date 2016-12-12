@@ -1,0 +1,13 @@
+[package]
+name = "tokio-named-pipes"
+version = "0.1.0"
+authors = ["Alex Crichton <alex@alexcrichton.com>"]
+
+[dependencies]
+tokio-core = "0.1.1"
+mio-named-pipes = { git = "https://github.com/alexcrichton/mio-named-pipes" }
+futures = '0.1.4'
+
+[replace.'mio:0.6.1']
+git = "https://github.com/alexcrichton/mio"
+branch = 'custom-iocp'
