@@ -12,10 +12,8 @@ Windows named pipe bindings for tokio.
 """
 
 [dependencies]
-tokio-core = "0.1.1"
+tokio-core = "0.1"
+tokio-io = "0.1"
 mio-named-pipes = { git = "https://github.com/alexcrichton/mio-named-pipes" }
-futures = '0.1.4'
-
-[replace.'mio:0.6.1']
-git = "https://github.com/alexcrichton/mio"
-branch = 'custom-iocp'
+futures = "0.1"
+bytes = "0.4"

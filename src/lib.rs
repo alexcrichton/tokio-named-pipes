@@ -1,6 +1,8 @@
 #![cfg(windows)]
 
 extern crate tokio_core;
+extern crate tokio_io;
+extern crate bytes;
 extern crate mio_named_pipes;
 extern crate futures;
 
@@ -9,9 +11,15 @@ use std::fmt;
 use std::io::{self, Read, Write};
 use std::os::windows::io::*;
 
-use futures::Async;
+use futures::{Async, Poll};
+
+#[allow(deprecated)]
 use tokio_core::io::Io;
+use bytes::{BufMut, Buf};
+
 use tokio_core::reactor::{PollEvented, Handle};
+
+use tokio_io::{AsyncRead, AsyncWrite};
 
 pub struct NamedPipe {
     io: PollEvented<mio_named_pipes::NamedPipe>,
@@ -50,6 +58,10 @@ impl NamedPipe {
     pub fn poll_write(&self) -> Async<()> {
         self.io.poll_write()
     }
+
+    fn io_mut(&mut self) -> &mut PollEvented<mio_named_pipes::NamedPipe> {
+        &mut self.io
+    }
 }
 
 impl Read for NamedPipe {
@@ -67,6 +79,7 @@ impl Write for NamedPipe {
     }
 }
 
+#[allow(deprecated)]
 impl Io for NamedPipe {
     fn poll_read(&mut self) -> Async<()> {
         <NamedPipe>::poll_read(self)
@@ -93,6 +106,7 @@ impl<'a> Write for &'a NamedPipe {
     }
 }
 
+#[allow(deprecated)]
 impl<'a> Io for &'a NamedPipe {
     fn poll_read(&mut self) -> Async<()> {
         <NamedPipe>::poll_read(self)
@@ -100,6 +114,58 @@ impl<'a> Io for &'a NamedPipe {
 
     fn poll_write(&mut self) -> Async<()> {
         <NamedPipe>::poll_write(self)
+    }
+}
+
+
+impl AsyncRead for NamedPipe {
+    unsafe fn prepare_uninitialized_buffer(&self, _: &mut [u8]) -> bool {
+        false
+    }
+
+    fn read_buf<B: BufMut>(&mut self, buf: &mut B) -> Poll<usize, io::Error> {
+        if let Async::NotReady = <NamedPipe>::poll_read(self) {
+            return Ok(Async::NotReady)
+        }
+
+        let mut stack_buf = [0u8; 1024];
+        let bytes_read = self.io_mut().read(&mut stack_buf);
+        match bytes_read {
+            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => { 
+                self.io_mut().need_read();
+                return Ok(Async::NotReady);
+            },
+            Err(e) => Err(e),
+            Ok(bytes_read) => {
+                buf.put_slice(&stack_buf[0..bytes_read]);
+                Ok(Async::Ready(bytes_read))
+            }
+        }
+    }
+}
+
+impl AsyncWrite for NamedPipe {
+    fn shutdown(&mut self) -> Poll<(), io::Error> {
+         Ok(().into())
+    }
+
+    fn write_buf<B: Buf>(&mut self, buf: &mut B) -> Poll<usize, io::Error> {
+        if let Async::NotReady = <NamedPipe>::poll_write(self) {
+            return Ok(Async::NotReady)
+        }
+
+        let bytes_wrt = self.io_mut().write(buf.bytes());
+        match bytes_wrt {
+            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => { 
+                self.io_mut().need_write();
+                return Ok(Async::NotReady);
+            },
+            Err(e) => Err(e),
+            Ok(bytes_wrt) => {
+                buf.advance(bytes_wrt);
+                Ok(Async::Ready(bytes_wrt))
+            }
+        }
     }
 }
 
