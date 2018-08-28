@@ -11,7 +11,7 @@ A library for integrating Windows [Named Pipes] with [tokio].
 ```toml
 # Cargo.toml
 [dependencies]
-tokio-named-pipes = "0.1"
+tokio-named-pipes = { git = "https://github.com/NikVolf/tokio-named-pipes", branch = "stable" }
 ```
 
 Next, add this to your crate:
