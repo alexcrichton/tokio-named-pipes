@@ -20,6 +20,3 @@ build: false
 test_script:
   - cargo test
   - cargo doc --no-deps
-
-after_test:
-  - travis-cargo doc-upload
