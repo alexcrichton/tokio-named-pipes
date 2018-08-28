@@ -1,6 +1,5 @@
 # tokio-named-pipes
-https://ci.appveyor.com/api/projects/status/x0pu2yxu8ygguqi6?svg=true
-[![Build status]()](https://ci.appveyor.com/project/nikvolf/tokio-named-pipes)
+[![Build status](https://ci.appveyor.com/api/projects/status/motwon3ro35xwb2x?svg=true)](https://ci.appveyor.com/project/NikolayVolf/tokio-named-pipes)
 
 [Documentation](http://alexcrichton.com/tokio-named-pipes)
 
