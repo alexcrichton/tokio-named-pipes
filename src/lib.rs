@@ -14,7 +14,7 @@ use std::os::windows::io::*;
 use futures::{Async, Poll};
 use bytes::{BufMut, Buf};
 use mio::Ready;
-use tokio::reactor::{PollEvented2};
+use tokio::reactor::{Handle, PollEvented2};
 use tokio::io::{AsyncRead, AsyncWrite};
 
 pub struct NamedPipe {
@@ -22,19 +22,19 @@ pub struct NamedPipe {
 }
 
 impl NamedPipe {
-    pub fn new<P: AsRef<OsStr>>(p: P) -> std::io::Result<NamedPipe> {
-        NamedPipe::_new(p.as_ref())
+    pub fn new<P: AsRef<OsStr>>(p: P, handle: &Handle) -> std::io::Result<NamedPipe> {
+        NamedPipe::_new(p.as_ref(), handle)
     }
 
-    fn _new(p: &OsStr) -> std::io::Result<NamedPipe> {
+    fn _new(p: &OsStr, handle: &Handle) -> std::io::Result<NamedPipe> {
         let inner = try!(mio_named_pipes::NamedPipe::new(p));
-        NamedPipe::from_pipe(inner)
+        NamedPipe::from_pipe(inner, handle)
     }
 
-    pub fn from_pipe(pipe: mio_named_pipes::NamedPipe)
+    pub fn from_pipe(pipe: mio_named_pipes::NamedPipe, handle: &Handle)
             -> std::io::Result<NamedPipe> {
         Ok(NamedPipe {
-            io: PollEvented2::new(pipe),
+            io: PollEvented2::new_with_handle(pipe, handle)?,
         })
     }
 
