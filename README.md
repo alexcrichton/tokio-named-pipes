@@ -1,6 +1,5 @@
 # tokio-named-pipes
-
-[![Build status](https://ci.appveyor.com/api/projects/status/x0pu2yxu8ygguqi6?svg=true)](https://ci.appveyor.com/project/alexcrichton/tokio-named-pipes)
+[![Build status](https://ci.appveyor.com/api/projects/status/motwon3ro35xwb2x?svg=true)](https://ci.appveyor.com/project/NikolayVolf/tokio-named-pipes)
 
 [Documentation](http://alexcrichton.com/tokio-named-pipes)
 
@@ -12,7 +11,7 @@ A library for integrating Windows [Named Pipes] with [tokio].
 ```toml
 # Cargo.toml
 [dependencies]
-tokio-named-pipes = "0.1"
+tokio-named-pipes = { git = "https://github.com/NikVolf/tokio-named-pipes", branch = "stable" }
 ```
 
 Next, add this to your crate:
