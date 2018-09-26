@@ -20,7 +20,6 @@ use mio::Ready;
 use tokio::reactor::{Handle, PollEvented2};
 use tokio::io::{AsyncRead, AsyncWrite};
 
-
 /// Named pipe connection.
 pub struct NamedPipe {
     io: PollEvented2<mio_named_pipes::NamedPipe>,
