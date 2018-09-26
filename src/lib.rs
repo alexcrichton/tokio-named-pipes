@@ -1,4 +1,7 @@
+//! Tokio wrapper for windows named pipes.
+
 #![cfg(windows)]
+#![warn(missing_docs)]
 
 extern crate tokio;
 extern crate bytes;
@@ -17,20 +20,19 @@ use mio::Ready;
 use tokio::reactor::{Handle, PollEvented2};
 use tokio::io::{AsyncRead, AsyncWrite};
 
+/// Named pipe connection.
 pub struct NamedPipe {
     io: PollEvented2<mio_named_pipes::NamedPipe>,
 }
 
 impl NamedPipe {
+    /// New named pipe connection to the existing event pool.
     pub fn new<P: AsRef<OsStr>>(p: P, handle: &Handle) -> std::io::Result<NamedPipe> {
-        NamedPipe::_new(p.as_ref(), handle)
-    }
-
-    fn _new(p: &OsStr, handle: &Handle) -> std::io::Result<NamedPipe> {
-        let inner = try!(mio_named_pipes::NamedPipe::new(p));
+        let inner = try!(mio_named_pipes::NamedPipe::new(p.as_ref()));
         NamedPipe::from_pipe(inner, handle)
     }
 
+    /// New named pipe connection to the existing event pool from the existig mio pipe.
     pub fn from_pipe(pipe: mio_named_pipes::NamedPipe, handle: &Handle)
             -> std::io::Result<NamedPipe> {
         Ok(NamedPipe {
@@ -38,18 +40,22 @@ impl NamedPipe {
         })
     }
 
+    /// Connect to the pipe.
     pub fn connect(&self) -> std::io::Result<()> {
         self.io.get_ref().connect()
     }
 
+    /// Disconnect from the pipe.
     pub fn disconnect(&self) -> std::io::Result<()> {
         self.io.get_ref().disconnect()
     }
 
+    /// Poll connection for read.
     pub fn poll_read_ready_readable(&mut self) -> tokio::io::Result<Async<Ready>> {
         self.io.poll_read_ready(Ready::readable())
     }
 
+    /// Poll connection for write.
     pub fn poll_write_ready(&mut self) -> tokio::io::Result<Async<Ready>> {
         self.io.poll_write_ready()
     }
@@ -103,7 +109,7 @@ impl AsyncRead for NamedPipe {
         let mut stack_buf = [0u8; 1024];
         let bytes_read = self.io_mut().read(&mut stack_buf);
         match bytes_read {
-            Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => { 
+            Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
                 self.io_mut().clear_read_ready(Ready::readable())?;
                 return Ok(Async::NotReady);
             },
@@ -128,7 +134,7 @@ impl AsyncWrite for NamedPipe {
 
         let bytes_wrt = self.io_mut().write(buf.bytes());
         match bytes_wrt {
-            Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => { 
+            Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
                 self.io_mut().clear_write_ready()?;
                 return Ok(Async::NotReady);
             },
