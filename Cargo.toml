@@ -14,6 +14,6 @@ Windows named pipe bindings for tokio.
 [dependencies]
 mio = "0.6"
 tokio = "0.1"
-mio-named-pipes = { git = "https://github.com/alexcrichton/mio-named-pipes" }
+mio-named-pipes = "0.1"
 futures = "0.1"
 bytes = "0.4"
